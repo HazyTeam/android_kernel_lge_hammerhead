@@ -51,7 +51,7 @@ extern void error(char *);
 #endif
 
 #ifdef CONFIG_KERNEL_LZ4
-#include "../../../../lib/decomprss_unlz4.c"
+#include "../../../../lib/decompress_unlz4.c"
 #endif
 
 int do_decompress(u8 *input, int len, u8 *output, void (*error)(char *x))
