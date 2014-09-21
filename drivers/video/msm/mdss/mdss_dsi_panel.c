@@ -21,6 +21,9 @@
 #include <linux/leds.h>
 #include <linux/pwm.h>
 #include <linux/err.h>
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+#include <linux/input/prevent_sleep.h>
+#endif
 #ifdef CONFIG_DEBUG_FS
 #include <linux/debugfs.h>
 #include <linux/ctype.h>
@@ -277,6 +280,16 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	struct mipi_panel_info *mipi;
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
 
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	if (prevent_sleep && in_phone_call)
+		prevent_sleep = false;
+#endif
+
+#ifdef CONFIG_PWRKEY_SUSPEND
+ 	if (pwrkey_pressed)
+ 		prevent_sleep = false;
+ #endif
+
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
@@ -299,6 +312,10 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 {
 	struct mipi_panel_info *mipi;
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
+#ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
+	if (prevent_sleep && in_phone_call)
+		prevent_sleep = false;
+#endif
 
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
