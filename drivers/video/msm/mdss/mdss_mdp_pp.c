@@ -1456,7 +1456,7 @@ int mdss_mdp_pp_init(struct device *dev)
 
 #if defined(CONFIG_LCD_KCAL)
 	if (!ret) {
-		mdss_mds_pp_argc();
+		mdss_mdp_pp_argc();
 		update_preset_lcdc_lut();
 	}
 #endif
