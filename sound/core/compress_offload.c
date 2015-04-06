@@ -489,9 +489,6 @@ static int snd_compress_check_input(struct snd_compr_params *params)
 	if (params->codec.ch_in == 0 || params->codec.ch_out == 0)
 		return -EINVAL;
 
-	if (!(params->codec.sample_rate & SNDRV_PCM_RATE_8000_192000))
-		return -EINVAL;
-
 	return 0;
 }
 
@@ -612,9 +609,10 @@ snd_compr_set_metadata(struct snd_compr_stream *stream, unsigned long arg)
 static inline int
 snd_compr_tstamp(struct snd_compr_stream *stream, unsigned long arg)
 {
-	struct snd_compr_tstamp tstamp = {0};
+	struct snd_compr_tstamp tstamp;
 	int ret;
 
+	memset(&tstamp, 0, sizeof(tstamp));
 	ret = snd_compr_update_tstamp(stream, &tstamp);
 	if (ret == 0)
 		ret = copy_to_user((struct snd_compr_tstamp __user *)arg,

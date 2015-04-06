@@ -17,6 +17,7 @@
  *
  */
 
+#include <linux/earlysuspend.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/cpufreq.h>
@@ -68,10 +69,6 @@ static int set_cpu_freq(struct cpufreq_policy *policy, unsigned int new_freq)
 	struct cpufreq_freqs freqs;
 	struct cpu_freq *limit = &per_cpu(cpu_freq_info, policy->cpu);
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
-
-#ifdef CONFIG_TURBO_BOOST
-	new_freq = msm_turbo(new_freq);
-#endif
 
 	if (limit->limits_init) {
 		if (new_freq > limit->allowed_max) {
@@ -310,7 +307,6 @@ static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 
 static int __cpuinit msm_cpufreq_cpu_callback(struct notifier_block *nfb,
 		unsigned long action, void *hcpu)
-
 {
 	unsigned int cpu = (unsigned long)hcpu;
 

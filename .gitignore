@@ -84,7 +84,3 @@ GTAGS
 *.orig
 *~
 \#*#
-
-/boot.img
-/dt.img
-storage0

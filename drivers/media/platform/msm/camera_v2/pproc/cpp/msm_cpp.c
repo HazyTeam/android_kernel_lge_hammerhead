@@ -260,8 +260,8 @@ static unsigned long msm_cpp_queue_buffer_info(struct cpp_device *cpp_dev,
 QUEUE_BUFF_ERROR2:
 	ion_unmap_iommu(cpp_dev->client, buff->map_info.ion_handle,
 		cpp_dev->domain_num, 0);
-QUEUE_BUFF_ERROR1:
 	ion_free(cpp_dev->client, buff->map_info.ion_handle);
+QUEUE_BUFF_ERROR1:
 	buff->map_info.ion_handle = NULL;
 	kzfree(buff);
 
@@ -895,35 +895,35 @@ static int cpp_close_node(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 
 	cpp_dev->cpp_open_cnt--;
 	if (cpp_dev->cpp_open_cnt == 0) {
-		pr_err("%s: irq_status: 0x%x\n", __func__,
+		pr_debug("irq_status: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x4));
-		pr_err("%s: DEBUG_SP: 0x%x\n", __func__,
+		pr_debug("DEBUG_SP: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x40));
-		pr_err("%s: DEBUG_T: 0x%x\n", __func__,
+		pr_debug("DEBUG_T: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x44));
-		pr_err("%s: DEBUG_N: 0x%x\n", __func__,
+		pr_debug("DEBUG_N: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x48));
-		pr_err("%s: DEBUG_R: 0x%x\n", __func__,
+		pr_debug("DEBUG_R: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x4C));
-		pr_err("%s: DEBUG_OPPC: 0x%x\n", __func__,
+		pr_debug("DEBUG_OPPC: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x50));
-		pr_err("%s: DEBUG_MO: 0x%x\n", __func__,
+		pr_debug("DEBUG_MO: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x54));
-		pr_err("%s: DEBUG_TIMER0: 0x%x\n", __func__,
+		pr_debug("DEBUG_TIMER0: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x60));
-		pr_err("%s: DEBUG_TIMER1: 0x%x\n", __func__,
+		pr_debug("DEBUG_TIMER1: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x64));
-		pr_err("%s: DEBUG_GPI: 0x%x\n", __func__,
+		pr_debug("DEBUG_GPI: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x70));
-		pr_err("%s: DEBUG_GPO: 0x%x\n", __func__,
+		pr_debug("DEBUG_GPO: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x74));
-		pr_err("%s: DEBUG_T0: 0x%x\n", __func__,
+		pr_debug("DEBUG_T0: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x80));
-		pr_err("%s: DEBUG_R0: 0x%x\n", __func__,
+		pr_debug("DEBUG_R0: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x84));
-		pr_err("%s: DEBUG_T1: 0x%x\n", __func__,
+		pr_debug("DEBUG_T1: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x88));
-		pr_err("%s: DEBUG_R1: 0x%x\n", __func__,
+		pr_debug("DEBUG_R1: 0x%x\n",
 			msm_camera_io_r(cpp_dev->cpp_hw_base + 0x8C));
 		msm_camera_io_w(0x0, cpp_dev->base + MSM_CPP_MICRO_CLKEN_CTL);
 		cpp_deinit_mem(cpp_dev);
@@ -1457,6 +1457,7 @@ long msm_cpp_subdev_ioctl(struct v4l2_subdev *sd,
 	case VIDIOC_MSM_CPP_FLUSH_QUEUE:
 		rc = msm_cpp_flush_frames(cpp_dev);
 		break;
+	case VIDIOC_MSM_CPP_APPEND_STREAM_BUFF_INFO:
 	case VIDIOC_MSM_CPP_ENQUEUE_STREAM_BUFF_INFO: {
 		struct msm_cpp_stream_buff_info_t *u_stream_buff_info;
 		struct msm_cpp_stream_buff_info_t k_stream_buff_info;
@@ -1514,9 +1515,11 @@ long msm_cpp_subdev_ioctl(struct v4l2_subdev *sd,
 			return -EINVAL;
 		}
 
-		rc = msm_cpp_add_buff_queue_entry(cpp_dev,
-			((k_stream_buff_info.identity >> 16) & 0xFFFF),
-			(k_stream_buff_info.identity & 0xFFFF));
+		if (cmd != VIDIOC_MSM_CPP_APPEND_STREAM_BUFF_INFO) {
+			rc = msm_cpp_add_buff_queue_entry(cpp_dev,
+				((k_stream_buff_info.identity >> 16) & 0xFFFF),
+				(k_stream_buff_info.identity & 0xFFFF));
+		}
 		if (!rc)
 			rc = msm_cpp_enqueue_buff_info_list(cpp_dev,
 				&k_stream_buff_info);
@@ -1723,6 +1726,9 @@ static long msm_cpp_subdev_do_ioctl(
 		struct cpp_device *cpp_dev = v4l2_get_subdevdata(sd);
 		struct msm_camera_v4l2_ioctl_t *ioctl_ptr = arg;
 		struct msm_cpp_frame_info_t inst_info;
+
+		memset(&inst_info, 0, sizeof(inst_info));
+
 		for (i = 0; i < MAX_ACTIVE_CPP_INSTANCE; i++) {
 			if (cpp_dev->cpp_subscribe_list[i].vfh == vfh) {
 				inst_info.inst_id = i;

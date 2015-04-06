@@ -264,17 +264,8 @@ void cpufreq_notify_transition(struct cpufreq_freqs *freqs, unsigned int state);
 void cpufreq_notify_utilization(struct cpufreq_policy *policy,
 		unsigned int load);
 
-#ifdef CONFIG_MSM_CPUFREQ_LIMITER
-extern unsigned int limited_max_freq;
-#endif
-
 static inline void cpufreq_verify_within_limits(struct cpufreq_policy *policy, unsigned int min, unsigned int max)
 {
-
-#ifdef CONFIG_MSM_CPUFREQ_LIMITER
-	max = min(limited_max_freq, max);
-#endif
-
 	if (policy->min < min)
 		policy->min = min;
 	if (policy->max < min)
@@ -326,6 +317,7 @@ __ATTR(_name, 0644, show_##_name, store_##_name)
 /*********************************************************************
  *                        CPUFREQ 2.6. INTERFACE                     *
  *********************************************************************/
+u64 get_cpu_idle_time(unsigned int cpu, u64 *wall, int io_busy);
 int cpufreq_get_policy(struct cpufreq_policy *policy, unsigned int cpu);
 int cpufreq_update_policy(unsigned int cpu);
 
@@ -384,9 +376,6 @@ extern struct cpufreq_governor cpufreq_gov_conservative;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTERACTIVE)
 extern struct cpufreq_governor cpufreq_gov_interactive;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_interactive)
-#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND)
-extern struct cpufreq_governor cpufreq_gov_intellidemand;
-#define CPUFREQ_DEFAULT_GOVERNOR        (&cpufreq_gov_intellidemand)
 #endif
 
 
